@@ -1,0 +1,854 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GeoAI Prospectivity</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@300;400;600;700&family=Nunito:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --r1: #6d1535;
+    --r2: #a3224f;
+    --r3: #c94475;
+    --r4: #de6b93;
+    --r5: #ed96b4;
+    --r6: #f4bace;
+    --core: #fef2f6;
+    --text-dark: #3a0a1e;
+    --text-mid:  #7a3050;
+    --text-light:#c07090;
+    --white: #ffffff;
+  }
+
+  body {
+    font-family: 'Nunito Sans', 'Avenir Next', 'Century Gothic', 'Trebuchet MS', sans-serif;
+    background: #fdf5f7;
+    color: var(--text-dark);
+    width: 100%;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 20px clamp(14px, 4vw, 40px) 28px;
+  }
+
+  h1 {
+    font-family: 'Nunito', 'Avenir Next', sans-serif;
+    font-size: clamp(0.9rem, 2.4vw, 1.2rem);
+    font-weight: 700;
+    color: var(--r1);
+    text-align: center;
+    letter-spacing: 0.01em;
+    line-height: 1.3;
+    margin-bottom: 4px;
+  }
+  .subtitle {
+    text-align: center;
+    font-size: clamp(0.58rem, 1.4vw, 0.7rem);
+    color: var(--text-light);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+    font-weight: 400;
+  }
+
+  .legend {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 10px 18px;
+    margin-bottom: 16px;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: clamp(0.58rem, 1.4vw, 0.68rem);
+    color: var(--text-mid);
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .legend-dot {
+    width: 9px; height: 9px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  /* Single-column default (phones) */
+  .layout {
+    display: flex;
+    flex-direction: column;
+  }
+  .layout-left {
+    width: 100%;
+    max-width: 420px;
+    margin: 0 auto;
+  }
+  .layout-right {
+    width: 100%;
+  }
+
+  .circle-wrap {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 12px;
+  }
+
+  svg.main-circle {
+    display: block;
+    width: 100%;
+    height: auto;
+    overflow: visible;
+  }
+
+  .ring {
+    cursor: pointer;
+    transition: opacity 0.18s, filter 0.18s;
+  }
+  .ring:hover, .ring.active {
+    opacity: 0.85;
+    filter: brightness(1.12) drop-shadow(0 0 7px rgba(169,34,79,0.45));
+  }
+
+  .hint {
+    text-align: center;
+    font-size: clamp(0.54rem, 1.3vw, 0.63rem);
+    color: var(--text-light);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+
+  .info-card {
+    background: var(--white);
+    border-radius: 10px;
+    padding: 14px 16px;
+    min-height: 100px;
+    border-left: 3px solid var(--r3);
+    box-shadow: 0 2px 12px rgba(109,21,53,0.09);
+    transition: border-color 0.25s, opacity 0.25s, transform 0.2s;
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  .info-card.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .card-stage {
+    font-size: clamp(0.54rem, 1.3vw, 0.62rem);
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    margin-bottom: 5px;
+    color: var(--text-light);
+  }
+  .card-title {
+    font-family: 'Nunito', 'Avenir Next', sans-serif;
+    font-size: clamp(0.85rem, 2.1vw, 1rem);
+    font-weight: 700;
+    color: var(--r1);
+    margin-bottom: 6px;
+    line-height: 1.25;
+  }
+  .card-desc {
+    font-size: clamp(0.72rem, 1.7vw, 0.82rem);
+    color: var(--text-mid);
+    line-height: 1.6;
+    font-weight: 400;
+  }
+
+  .footer {
+    text-align: center;
+    margin-top: 16px;
+    font-family: 'Nunito', 'Avenir Next', sans-serif;
+    font-style: italic;
+    font-size: clamp(0.68rem, 1.7vw, 0.8rem);
+    color: var(--r2);
+    line-height: 1.5;
+  }
+
+  /* Tablet and up: side-by-side */
+  @media (min-width: 660px) {
+    .layout {
+      flex-direction: row;
+      align-items: flex-start;
+      gap: clamp(20px, 4vw, 52px);
+    }
+    .layout-left {
+      flex: 0 0 clamp(240px, 44%, 400px);
+      max-width: none;
+      margin: 0;
+    }
+    .layout-right {
+      flex: 1;
+      padding-top: 6px;
+    }
+    .hint { margin-bottom: 0; }
+    .footer { text-align: left; }
+    .info-card { min-height: 150px; }
+  }
+</style>
+</head>
+<body>
+
+<h1>From Challenge to Spatial Intelligence</h1>
+<p class="subtitle">Hover a ring to explore</p>
+
+<div class="legend">
+  <div class="legend-item">
+    <div class="legend-dot" style="background:var(--r1)"></div> Problem
+  </div>
+  <div class="legend-item">
+    <div class="legend-dot" style="background:var(--r4)"></div> GeoAI Action
+  </div>
+  <div class="legend-item">
+    <div class="legend-dot" style="background:var(--r6)"></div> Solution
+  </div>
+</div>
+
+<div class="layout">
+  <div class="layout-left">
+    <div class="circle-wrap">
+      <svg class="main-circle" viewBox="0 0 260 234">
+
+        <!-- All ellipses share top at y=6; cy = 6 + ry; ~22px spacing between rings -->
+        <ellipse class="ring" cx="130" cy="116" rx="124" ry="110" fill="var(--r1)"
+          data-stage="Problem" data-color="#6d1535"
+          data-title="3,479 km² of Underexplored Ground"
+          data-desc="Kakamega County hosts one of East Africa's most significant Archaean greenstone belts — yet the vast majority has never been systematically evaluated. Scale alone defeats traditional methods."/>
+
+        <ellipse class="ring" cx="130" cy="96" rx="102" ry="90" fill="var(--r2)"
+          data-stage="Problem" data-color="#a3224f"
+          data-title="Multi-Source Data Held in Silos"
+          data-desc="The global AI in mining market was valued at $29.94 billion in 2024 and is projected to reach $685 billion by 2033 — driven by exactly this: fusing massive geoscientific datasets at unprecedented speed.This model integrates geology, structural proximity, 10 orogenic gold pathfinder elements, Sentinel-2 alteration indices, and terrain derivatives — standardised to 10m resolution — into a single predictor stack no human team could evaluate simultaneously."/>
+
+        <ellipse class="ring" cx="130" cy="76" rx="80" ry="70" fill="var(--r3)"
+          data-stage="GeoAI Action" data-color="#c94475"
+          data-title="ArcGIS Ecosystem as Unified Pipeline"
+          data-desc="ArcGIS Pro, Notebooks, Dashboards, Experience Builder, and Survey123 form a complete pipeline — from raw data ingestion to stakeholder-ready outputs — all within a single integrated platform."/>
+
+        <ellipse class="ring" cx="130" cy="58" rx="60" ry="52" fill="var(--r4)"
+          data-stage="GeoAI Action" data-color="#de6b93"
+          data-title="60+ Geoscientific Predictors Fused"
+          data-desc="Geology, structural datasets, geochemical datasets, including 10 gold pathfinder elements, Sentinel-2 alteration indices, and terrain derivatives — standardised to 10m resolution and fused into one predictor stack."/>
+
+        <ellipse class="ring" cx="130" cy="42" rx="42" ry="36" fill="var(--r5)"
+          data-stage="GeoAI Action" data-color="#ed96b4"
+          data-title="Random Forest + SVM — Dual Validation"
+          data-desc="Traditional exploration involves extensive manual labour and high costs. Machine learning replaces that with algorithms capable of predicting mineral deposits with remarkable precision. Two independent models — RF (AUC: 0.981) and SVM (AUC: 0.975) — trained on 68 confirmed gold occurrences, cross-validated spatially. Where both agree, confidence is highest."/>
+
+        <ellipse class="ring" cx="130" cy="28" rx="24" ry="22" fill="var(--r6)"
+          data-stage="Solution" data-color="#f4bace"
+          data-title="County-Wide Prospectivity Map"
+          data-desc="Five classified zones — Very Low to Very High — published to ArcGIS Hub with interactive dashboards and a StoryMap investor narrative. Updated as new field data arrives via Survey123."/>
+
+        <ellipse class="ring" cx="130" cy="16" rx="11" ry="10" fill="var(--core)" stroke="var(--r6)" stroke-width="1.5"
+          data-stage="Solution" data-color="#f4bace"
+          data-title="131 km² — Drill with Confidence"
+          data-desc="131 km² of high-confidence, unlicensed ground open for investment, according to RF model. 202.4 km² where both models agree. Your exploration budget goes exactly where the data says it should."/>
+
+
+      </svg>
+    </div>
+    <p class="hint">&#8593; the power of GeoAI in Prospectivity</p>
+  </div>
+
+  <div class="layout-right">
+    <div class="info-card" id="info-card">
+      <div class="card-stage" id="card-stage"></div>
+      <div class="card-title" id="card-title"></div>
+      <div class="card-desc"  id="card-desc"></div>
+    </div>
+    <div class="footer">The geology was always there.<br>GeoAI is how we read it at full resolution.</div>
+  </div>
+</div>
+
+<script>
+  const card  = document.getElementById('info-card');
+  const stage = document.getElementById('card-stage');
+  const ttl   = document.getElementById('card-title');
+  const dsc   = document.getElementById('card-desc');
+  let active = null;
+
+  document.querySelectorAll('.ring').forEach(r => {
+    ['mouseenter','click'].forEach(evt => {
+      r.addEventListener(evt, () => {
+        stage.textContent      = r.dataset.stage;
+        ttl.textContent        = r.dataset.title;
+        dsc.textContent        = r.dataset.desc;
+        card.style.borderColor = r.dataset.color;
+        card.classList.add('visible');
+        if (active) active.classList.remove('active');
+        r.classList.add('active');
+        active = r;
+      });
+    });
+  });
+</script>
+
+<!-- ═══════════════════════════════════════════════════════════
+     SECTION 2 — TECHNICAL DEEP DIVE
+═══════════════════════════════════════════════════════════ -->
+<style>
+/* ── SECTION 2 STYLES ── */
+.section-divider {
+  margin: 36px 0 0;
+  border: none;
+  border-top: 1px solid #f0d0da;
+}
+
+.section2 {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 32px clamp(14px,4vw,40px) 40px;
+  font-family: 'Nunito Sans','Avenir Next','Century Gothic','Trebuchet MS',sans-serif;
+}
+
+.s2-heading {
+  font-family: 'Nunito','Avenir Next',sans-serif;
+  font-size: clamp(1rem,2.6vw,1.35rem);
+  font-weight: 700;
+  color: #6d1535;
+  text-align: center;
+  margin-bottom: 4px;
+}
+.s2-sub {
+  text-align: center;
+  font-size: clamp(0.58rem,1.4vw,0.68rem);
+  color: #c07090;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 28px;
+}
+
+/* block label */
+.block-label {
+  font-size: clamp(0.6rem,1.4vw,0.68rem);
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #a3224f;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.block-label::after {
+  content:'';
+  flex:1;
+  height:1px;
+  background: linear-gradient(90deg,#f4bace,transparent);
+}
+
+/* data layer cards */
+.layer-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(155px,1fr));
+  gap: 10px;
+  margin-bottom: 28px;
+}
+.layer-card {
+  background: #fff;
+  border-radius: 10px;
+  padding: 12px 13px 10px;
+  border-top: 3px solid var(--lc, #c94475);
+  box-shadow: 0 1px 8px rgba(109,21,53,0.07);
+}
+.layer-card .lc-icon { font-size: 1.35rem; margin-bottom: 6px; }
+.layer-card .lc-name {
+  font-family: 'Nunito','Avenir Next',sans-serif;
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: #3a0a1e;
+  margin-bottom: 3px;
+  line-height: 1.2;
+}
+.layer-card .lc-count {
+  font-size: 0.62rem;
+  color: #a3224f;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  margin-bottom: 4px;
+}
+.layer-card .lc-desc {
+  font-size: 0.65rem;
+  color: #7a3050;
+  line-height: 1.5;
+}
+
+/* pipeline flow */
+.pipeline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 6px;
+  margin-bottom: 28px;
+}
+.pipe-step {
+  flex: 1;
+  min-width: 115px;
+  background: #fff;
+  border-radius: 9px;
+  padding: 10px 11px;
+  border-left: 3px solid var(--ps, #c94475);
+  box-shadow: 0 1px 8px rgba(109,21,53,0.07);
+  position: relative;
+}
+.pipe-step .ps-num {
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: #c07090;
+  margin-bottom: 4px;
+}
+.pipe-step .ps-title {
+  font-family: 'Nunito','Avenir Next',sans-serif;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #3a0a1e;
+  margin-bottom: 3px;
+  line-height: 1.2;
+}
+.pipe-step .ps-body {
+  font-size: 0.62rem;
+  color: #7a3050;
+  line-height: 1.5;
+}
+.pipe-arrow {
+  display: flex;
+  align-items: center;
+  color: #f4bace;
+  font-size: 1rem;
+  flex-shrink: 0;
+  align-self: center;
+}
+
+/* model metrics */
+.metrics-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 28px;
+}
+.model-card {
+  background: #fff;
+  border-radius: 10px;
+  padding: 14px 15px;
+  border-top: 3px solid var(--mc,#c94475);
+  box-shadow: 0 1px 8px rgba(109,21,53,0.07);
+}
+.model-card .mc-title {
+  font-family: 'Nunito','Avenir Next',sans-serif;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #3a0a1e;
+  margin-bottom: 10px;
+}
+.metric-row-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+.metric-row-item .m-label { font-size: 0.62rem; color: #7a3050; }
+.metric-row-item .m-val {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #6d1535;
+  font-family: 'Nunito','Avenir Next',sans-serif;
+}
+.metric-bar-wrap {
+  height: 5px;
+  background: #fce8ef;
+  border-radius: 3px;
+  margin-top: 2px;
+  margin-bottom: 8px;
+  overflow: hidden;
+}
+.metric-bar {
+  height: 100%;
+  border-radius: 3px;
+  background: linear-gradient(90deg, var(--mc,#c94475), #ed96b4);
+  transition: width 1s ease;
+}
+
+/* feature importance chart (SVG) */
+.feat-wrap {
+  background: #fff;
+  border-radius: 10px;
+  padding: 16px;
+  box-shadow: 0 1px 8px rgba(109,21,53,0.07);
+  margin-bottom: 28px;
+  overflow-x: auto;
+}
+.feat-wrap svg { display:block; min-width: 280px; }
+
+/* prospectivity classes */
+.prosp-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 28px;
+}
+.prosp-chip {
+  flex: 1;
+  min-width: 90px;
+  border-radius: 8px;
+  padding: 10px 12px;
+  text-align: center;
+}
+.prosp-chip .pc-label {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 3px;
+}
+.prosp-chip .pc-area {
+  font-family: 'Nunito','Avenir Next',sans-serif;
+  font-size: 0.9rem;
+  font-weight: 700;
+  line-height: 1;
+  margin-bottom: 2px;
+}
+.prosp-chip .pc-sub { font-size: 0.58rem; opacity: 0.8; }
+
+/* validation diagram */
+.val-box {
+  background: #fff;
+  border-radius: 10px;
+  padding: 14px 16px;
+  box-shadow: 0 1px 8px rgba(109,21,53,0.07);
+  margin-bottom: 12px;
+}
+.val-box p {
+  font-size: 0.72rem;
+  color: #7a3050;
+  line-height: 1.6;
+}
+.val-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 10px;
+}
+.val-stat {
+  background: #fdf5f7;
+  border-radius: 7px;
+  padding: 8px 12px;
+  text-align: center;
+  flex: 1;
+  min-width: 80px;
+}
+.val-stat .vs-n {
+  font-family: 'Nunito','Avenir Next',sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #6d1535;
+  line-height: 1;
+}
+.val-stat .vs-l { font-size: 0.58rem; color: #c07090; margin-top: 2px; }
+
+@media(max-width:480px){
+  .metrics-row { grid-template-columns: 1fr; }
+  .pipe-arrow  { display: none; }
+}
+</style>
+
+<hr class="section-divider">
+
+<section class="section2">
+
+  <h2 class="s2-heading">Under the Hood — Data, Training & Processing</h2>
+  <p class="s2-sub">61 predictor variables · 5 data streams · 2 machine learning models</p>
+
+  <!-- ── DATA LAYERS ── -->
+  <div class="block-label">01 — Predictor Data Stack</div>
+  <div class="layer-grid">
+
+    <div class="layer-card" style="--lc:#6d1535">
+      <div class="lc-icon">⚗️</div>
+      <div class="lc-name">Geochemistry</div>
+      <div class="lc-count">31 layers</div>
+      <div class="lc-desc">24 pathfinder & major elements (Ag, As, Bi, Cu, Mn, Pb, Sb, W, Zn…) plus 7 diagnostic ratios: Fe/Mn, K/Al, K/Na, Th/K, U/K and more. Global dataset clipped to county boundary.</div>
+    </div>
+
+    <div class="layer-card" style="--lc:#a3224f">
+      <div class="lc-icon">🛰️</div>
+      <div class="lc-name">Remote Sensing</div>
+      <div class="lc-count">3 layers</div>
+      <div class="lc-desc">Sentinel-2 derived alteration indices: Clay-AlOH (hydroxyl alteration), Ferrous minerals, and Iron Oxide — capturing hydrothermal footprints in deeply weathered tropical terrain.</div>
+    </div>
+
+    <div class="layer-card" style="--lc:#c94475">
+      <div class="lc-icon">⛰️</div>
+      <div class="lc-name">Terrain (DEM)</div>
+      <div class="lc-count">4 layers</div>
+      <div class="lc-desc">10m SRTM derivatives: Slope, General Curvature, Plan Curvature, Profile Curvature — capturing topographic expressions of underlying structural and lithological controls.</div>
+    </div>
+
+    <div class="layer-card" style="--lc:#de6b93">
+      <div class="lc-icon">🪨</div>
+      <div class="lc-name">Lithology</div>
+      <div class="lc-count">21 layers</div>
+      <div class="lc-desc">21 lithological units one-hot encoded as binary rasters from Kenya Geological Survey maps — Nyanzian greenstones, BIF, granites, phonolites and more. Enables the models to learn rock-type prospectivity.</div>
+    </div>
+
+    <div class="layer-card" style="--lc:#ed96b4">
+      <div class="lc-icon">📐</div>
+      <div class="lc-name">Structure + Soil</div>
+      <div class="lc-count">3 layers</div>
+      <div class="lc-desc">Euclidean distance to mapped fault structures — the strongest structural predictor in shear-zone hosted orogenic gold systems. Plus Organic Matter and pH soil covariates.</div>
+    </div>
+
+  </div>
+
+  <!-- ── PREPROCESSING PIPELINE ── -->
+  <div class="block-label">02 — Preprocessing Pipeline in ArcGIS Pro & Notebooks</div>
+  <div class="pipeline">
+
+    <div class="pipe-step" style="--ps:#6d1535">
+      <div class="ps-num">Step 01</div>
+      <div class="ps-title">CRS Alignment</div>
+      <div class="ps-body">All 63 rasters reprojected to Arc 1960 / UTM Zone 36N (EPSG:21096). Snap raster set to dem10 to guarantee identical pixel grids across all layers.</div>
+    </div>
+    <div class="pipe-arrow">›</div>
+
+    <div class="pipe-step" style="--ps:#a3224f">
+      <div class="ps-num">Step 02</div>
+      <div class="ps-title">Resolution Standardisation</div>
+      <div class="ps-body">All rasters resampled to 10m cell size using bilinear interpolation (continuous) or nearest-neighbour (categorical lithology). Extent clipped to county boundary mask.</div>
+    </div>
+    <div class="pipe-arrow">›</div>
+
+    <div class="pipe-step" style="--ps:#c94475">
+      <div class="ps-num">Step 03</div>
+      <div class="ps-title">NoData Masking</div>
+      <div class="ps-body">County boundary polygon converted to raster mask. Applied to all 63 layers — ensuring pixels outside Kakamega County return NoData, not zero values that corrupt model training.</div>
+    </div>
+    <div class="pipe-arrow">›</div>
+
+    <div class="pipe-step" style="--ps:#de6b93">
+      <div class="ps-num">Step 04</div>
+      <div class="ps-title">Point Extraction</div>
+      <div class="ps-body">ExtractMultiValuesToPoints: all 63 predictor raster values sampled at 409 training point locations. Output: TrainingPts feature class with 67 fields (63 predictors + OBJECTID, Shape, Label, TxtLabel).</div>
+    </div>
+    <div class="pipe-arrow">›</div>
+
+    <div class="pipe-step" style="--ps:#ed96b4">
+      <div class="ps-num">Step 05</div>
+      <div class="ps-title">SMOTE Balancing</div>
+      <div class="ps-body">Class imbalance addressed via Synthetic Minority Over-sampling Technique. 68 gold occurrences vs 341 background — SMOTE generates synthetic positive samples to balance training distribution before model fitting.</div>
+    </div>
+
+  </div>
+
+  <!-- ── TRAINING DATA ── -->
+  <div class="block-label">03 — Training Data & Spatial Validation Design</div>
+  <div class="val-box">
+    <p>Training points were drawn from <strong>68 confirmed gold occurrence localities</strong> within the Liranda Corridor — including the Isulu and Bushiangala deposits operated by Shanta Gold Ltd — paired with <strong>341 stratified background samples</strong> representing non-prospective ground. Spatial cross-validation used a <strong>5km fishnet grid</strong> (133 blocks) to ensure training and validation data were always geographically separated — preventing data leakage that conventional k-fold CV cannot avoid in spatial prediction tasks.</p>
+    <div class="val-stats">
+      <div class="val-stat"><div class="vs-n">409</div><div class="vs-l">Total Training Points</div></div>
+      <div class="val-stat"><div class="vs-n">68</div><div class="vs-l">Gold Occurrences</div></div>
+      <div class="val-stat"><div class="vs-n">341</div><div class="vs-l">Background Points</div></div>
+      <div class="val-stat"><div class="vs-n">133</div><div class="vs-l">Spatial CV Blocks</div></div>
+      <div class="val-stat"><div class="vs-n">5 km</div><div class="vs-l">Block Size</div></div>
+      <div class="val-stat"><div class="vs-n">63</div><div class="vs-l">Predictor Variables</div></div>
+    </div>
+  </div>
+
+  <!-- ── FEATURE IMPORTANCE ── -->
+  <div class="block-label" style="margin-top:24px">04 — Random Forest Feature Importance (Top 15)</div>
+  <div class="feat-wrap">
+    <svg viewBox="0 0 560 260" width="100%">
+      <!-- axis -->
+      <line x1="110" y1="10" x2="110" y2="230" stroke="#f4bace" stroke-width="1"/>
+      <line x1="110" y1="230" x2="548" y2="230" stroke="#f4bace" stroke-width="1"/>
+
+      <!-- grid lines -->
+      <line x1="110" y1="230" x2="548" y2="230" stroke="#fce8ef" stroke-width="1"/>
+      <line x1="220" y1="10"  x2="220" y2="230" stroke="#fce8ef" stroke-width="0.5"/>
+      <line x1="330" y1="10"  x2="330" y2="230" stroke="#fce8ef" stroke-width="0.5"/>
+      <line x1="440" y1="10"  x2="440" y2="230" stroke="#fce8ef" stroke-width="0.5"/>
+      <line x1="548" y1="10"  x2="548" y2="230" stroke="#fce8ef" stroke-width="0.5"/>
+
+      <!-- x-axis labels -->
+      <text x="110" y="244" text-anchor="middle" font-size="8" fill="#c07090">0</text>
+      <text x="220" y="244" text-anchor="middle" font-size="8" fill="#c07090">0.025</text>
+      <text x="330" y="244" text-anchor="middle" font-size="8" fill="#c07090">0.050</text>
+      <text x="440" y="244" text-anchor="middle" font-size="8" fill="#c07090">0.075</text>
+      <text x="548" y="244" text-anchor="middle" font-size="8" fill="#c07090">0.100</text>
+
+      <!-- x-axis title -->
+      <text x="329" y="258" text-anchor="middle" font-size="8" fill="#a3224f" font-weight="bold" letter-spacing="1">MEAN DECREASE IN IMPURITY</text>
+
+      <!-- bars: scale factor = (548-110)/0.100 = 4380 per unit -->
+      <!-- Mn 0.098 -->
+      <rect x="110" y="16"  width="429" height="10" rx="3" fill="url(#gb1)"/>
+      <text x="106" y="24" text-anchor="end" font-size="9" fill="#3a0a1e" font-family="'Nunito Sans','Avenir Next',sans-serif">Mn</text>
+      <text x="543" y="24" text-anchor="end" font-size="8" fill="#a3224f">0.098</text>
+
+      <!-- W 0.091 -->
+      <rect x="110" y="30"  width="398" height="10" rx="3" fill="url(#gb2)"/>
+      <text x="106" y="38" text-anchor="end" font-size="9" fill="#3a0a1e" font-family="'Nunito Sans','Avenir Next',sans-serif">W</text>
+      <text x="512" y="38" text-anchor="end" font-size="8" fill="#a3224f">0.091</text>
+
+      <!-- Sb 0.085 -->
+      <rect x="110" y="44"  width="372" height="10" rx="3" fill="url(#gb2)"/>
+      <text x="106" y="52" text-anchor="end" font-size="9" fill="#3a0a1e" font-family="'Nunito Sans','Avenir Next',sans-serif">Sb</text>
+      <text x="486" y="52" text-anchor="end" font-size="8" fill="#a3224f">0.085</text>
+
+      <!-- As 0.079 -->
+      <rect x="110" y="58"  width="346" height="10" rx="3" fill="url(#gb2)"/>
+      <text x="106" y="66" text-anchor="end" font-size="9" fill="#3a0a1e" font-family="'Nunito Sans','Avenir Next',sans-serif">As</text>
+      <text x="460" y="66" text-anchor="end" font-size="8" fill="#a3224f">0.079</text>
+
+      <!-- Cu 0.072 -->
+      <rect x="110" y="72"  width="315" height="10" rx="3" fill="url(#gb3)"/>
+      <text x="106" y="80" text-anchor="end" font-size="9" fill="#3a0a1e" font-family="'Nunito Sans','Avenir Next',sans-serif">Cu</text>
+      <text x="429" y="80" text-anchor="end" font-size="8" fill="#a3224f">0.072</text>
+
+      <!-- Fe/Mn 0.068 -->
+      <rect x="110" y="86"  width="298" height="10" rx="3" fill="url(#gb3)"/>
+      <text x="106" y="94" text-anchor="end" font-size="9" fill="#3a0a1e" font-family="'Nunito Sans','Avenir Next',sans-serif">Fe/Mn</text>
+      <text x="412" y="94" text-anchor="end" font-size="8" fill="#a3224f">0.068</text>
+
+      <!-- Zn 0.061 -->
+      <rect x="110" y="100" width="267" height="10" rx="3" fill="url(#gb3)"/>
+      <text x="106" y="108" text-anchor="end" font-size="9" fill="#3a0a1e" font-family="'Nunito Sans','Avenir Next',sans-serif">Zn</text>
+      <text x="381" y="108" text-anchor="end" font-size="8" fill="#a3224f">0.061</text>
+
+      <!-- Bi 0.055 -->
+      <rect x="110" y="114" width="241" height="10" rx="3" fill="url(#gb4)"/>
+      <text x="106" y="122" text-anchor="end" font-size="9" fill="#3a0a1e" font-family="'Nunito Sans','Avenir Next',sans-serif">Bi</text>
+      <text x="355" y="122" text-anchor="end" font-size="8" fill="#a3224f">0.055</text>
+
+      <!-- Tl 0.049 -->
+      <rect x="110" y="128" width="214" height="10" rx="3" fill="url(#gb4)"/>
+      <text x="106" y="136" text-anchor="end" font-size="9" fill="#3a0a1e" font-family="'Nunito Sans','Avenir Next',sans-serif">Tl</text>
+      <text x="328" y="136" text-anchor="end" font-size="8" fill="#a3224f">0.049</text>
+
+      <!-- V 0.044 -->
+      <rect x="110" y="142" width="193" height="10" rx="3" fill="url(#gb4)"/>
+      <text x="106" y="150" text-anchor="end" font-size="9" fill="#3a0a1e" font-family="'Nunito Sans','Avenir Next',sans-serif">V</text>
+      <text x="307" y="150" text-anchor="end" font-size="8" fill="#a3224f">0.044</text>
+
+      <!-- Cr 0.040 -->
+      <rect x="110" y="156" width="175" height="10" rx="3" fill="url(#gb5)"/>
+      <text x="106" y="164" text-anchor="end" font-size="9" fill="#3a0a1e" font-family="'Nunito Sans','Avenir Next',sans-serif">Cr</text>
+      <text x="289" y="164" text-anchor="end" font-size="8" fill="#a3224f">0.040</text>
+
+      <!-- Pb 0.036 -->
+      <rect x="110" y="170" width="158" height="10" rx="3" fill="url(#gb5)"/>
+      <text x="106" y="178" text-anchor="end" font-size="9" fill="#3a0a1e" font-family="'Nunito Sans','Avenir Next',sans-serif">Pb</text>
+      <text x="272" y="178" text-anchor="end" font-size="8" fill="#a3224f">0.036</text>
+
+      <!-- OM 0.031 -->
+      <rect x="110" y="184" width="136" height="10" rx="3" fill="url(#gb5)"/>
+      <text x="106" y="192" text-anchor="end" font-size="9" fill="#3a0a1e" font-family="'Nunito Sans','Avenir Next',sans-serif">OM</text>
+      <text x="250" y="192" text-anchor="end" font-size="8" fill="#a3224f">0.031</text>
+
+      <!-- Ferrous 0.027 -->
+      <rect x="110" y="198" width="118" height="10" rx="3" fill="url(#gb5)"/>
+      <text x="106" y="206" text-anchor="end" font-size="9" fill="#3a0a1e" font-family="'Nunito Sans','Avenir Next',sans-serif">Ferrous</text>
+      <text x="232" y="206" text-anchor="end" font-size="8" fill="#a3224f">0.027</text>
+
+      <!-- distFaults 0.022 -->
+      <rect x="110" y="212" width="96"  height="10" rx="3" fill="url(#gb5)"/>
+      <text x="106" y="220" text-anchor="end" font-size="9" fill="#3a0a1e" font-family="'Nunito Sans','Avenir Next',sans-serif">Dist. Faults</text>
+      <text x="210" y="220" text-anchor="end" font-size="8" fill="#a3224f">0.022</text>
+
+      <!-- gradient defs -->
+      <defs>
+        <linearGradient id="gb1" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#6d1535"/><stop offset="100%" stop-color="#a3224f"/></linearGradient>
+        <linearGradient id="gb2" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#a3224f"/><stop offset="100%" stop-color="#c94475"/></linearGradient>
+        <linearGradient id="gb3" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#c94475"/><stop offset="100%" stop-color="#de6b93"/></linearGradient>
+        <linearGradient id="gb4" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#de6b93"/><stop offset="100%" stop-color="#ed96b4"/></linearGradient>
+        <linearGradient id="gb5" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#ed96b4"/><stop offset="100%" stop-color="#f4bace"/></linearGradient>
+      </defs>
+    </svg>
+    <p style="font-size:0.62rem;color:#c07090;text-align:center;margin-top:6px;">
+      Top predictors are all orogenic gold pathfinder elements — geologically consistent with the sulphide assemblage confirmed at Isulu and Bushiangala (arsenopyrite, sphalerite, galena, molybdenite).
+    </p>
+  </div>
+
+  <!-- ── MODEL METRICS ── -->
+  <div class="block-label">05 — Model Performance Metrics</div>
+  <div class="metrics-row">
+
+    <div class="model-card" style="--mc:#6d1535">
+      <div class="mc-title">🌳 Random Forest (RF)</div>
+
+      <div class="metric-row-item"><span class="m-label">Spatial Holdout ROC-AUC</span><span class="m-val">0.981</span></div>
+      <div class="metric-bar-wrap"><div class="metric-bar" style="width:98.1%"></div></div>
+
+      <div class="metric-row-item"><span class="m-label">Spatial Holdout PR-AUC</span><span class="m-val">0.910</span></div>
+      <div class="metric-bar-wrap"><div class="metric-bar" style="width:91.0%"></div></div>
+
+      <div class="metric-row-item"><span class="m-label">OOF ROC-AUC</span><span class="m-val">0.966</span></div>
+      <div class="metric-bar-wrap"><div class="metric-bar" style="width:96.6%"></div></div>
+
+      <div class="metric-row-item"><span class="m-label">Gold Occurrence Recall</span><span class="m-val">1.000</span></div>
+      <div class="metric-bar-wrap"><div class="metric-bar" style="width:100%"></div></div>
+
+      <div class="metric-row-item"><span class="m-label">Decision Threshold (F2)</span><span class="m-val">0.310</span></div>
+    </div>
+
+    <div class="model-card" style="--mc:#a3224f">
+      <div class="mc-title">🧮 Support Vector Machine (SVM)</div>
+
+      <div class="metric-row-item"><span class="m-label">Spatial Holdout ROC-AUC</span><span class="m-val">0.975</span></div>
+      <div class="metric-bar-wrap"><div class="metric-bar" style="width:97.5%"></div></div>
+
+      <div class="metric-row-item"><span class="m-label">Spatial Holdout PR-AUC</span><span class="m-val">0.850</span></div>
+      <div class="metric-bar-wrap"><div class="metric-bar" style="width:85.0%"></div></div>
+
+      <div class="metric-row-item"><span class="m-label">OOF ROC-AUC</span><span class="m-val">0.964</span></div>
+      <div class="metric-bar-wrap"><div class="metric-bar" style="width:96.4%"></div></div>
+
+      <div class="metric-row-item"><span class="m-label">Gold Occurrence Recall</span><span class="m-val">1.000</span></div>
+      <div class="metric-bar-wrap"><div class="metric-bar" style="width:100%"></div></div>
+
+      <div class="metric-row-item"><span class="m-label">Best C (RBF kernel)</span><span class="m-val">1</span></div>
+    </div>
+
+  </div>
+
+  <!-- ── PROSPECTIVITY CLASSES ── -->
+  <div class="block-label">06 — GeoAI Output — Prospectivity Classification</div>
+  <div class="prosp-row">
+    <div class="prosp-chip" style="background:#2d6a1f;color:#fff">
+      <div class="pc-label">Very High</div>
+      <div class="pc-area">RF: 507 km²</div>
+      <div class="pc-sub">SVM: 988 km²</div>
+    </div>
+    <div class="prosp-chip" style="background:#78b041;color:#fff">
+      <div class="pc-label">High</div>
+      <div class="pc-area">RF: 345 km²</div>
+      <div class="pc-sub">SVM: 147 km²</div>
+    </div>
+    <div class="prosp-chip" style="background:#f5d327;color:#3a2a00">
+      <div class="pc-label">Moderate</div>
+      <div class="pc-area">Transitional</div>
+      <div class="pc-sub">Both models</div>
+    </div>
+    <div class="prosp-chip" style="background:#e07b20;color:#fff">
+      <div class="pc-label">Low</div>
+      <div class="pc-area">Low signal</div>
+      <div class="pc-sub">Both models</div>
+    </div>
+    <div class="prosp-chip" style="background:#c0392b;color:#fff">
+      <div class="pc-label">Very Low</div>
+      <div class="pc-area">Background</div>
+      <div class="pc-sub">Both models</div>
+    </div>
+  </div>
+
+  <div class="val-box">
+    <p>The Liranda Corridor's known deposits (Isulu, Bushiangala) fall entirely within the <strong>Very High</strong> class in both models — confirming that the GeoAI system correctly identifies established mineralisation before extending predictions to undrilled ground. The <strong>202.4 km² consensus zone</strong> (where RF and SVM independently agree on High or Very High) represents the most investment-ready ground in the county.</p>
+  </div>
+
+</section>
+</body>
+</html>
